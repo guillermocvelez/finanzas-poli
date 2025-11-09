@@ -17,17 +17,34 @@
           </div>
         </header>
 
-        <main class="main-content">
-          <!-- Balance Total Card -->
+        <main class="main-content">          
           <div class="balance-card">
-            <p class="balance-label">Saldo Total</p>
-            <h1 class="balance-amount">{{ formatCurrency(balance) }}</h1>
+            <p class="balance-label" :key="`label-${selectedCategory}`">{{ selectedCategory === 'cuentas' ? 'Saldo en Cuentas' : selectedCategory === 'ahorros' ? 'Saldo en Ahorros' : 'Saldo en Inversiones' }}</p>
+            <h1 class="balance-amount" :key="`amount-${selectedCategory}`">{{ formatCurrency(currentBalance) }}</h1>
             
-            <!-- Segmented Control -->
+            
             <div class="segment-control">
-              <button class="segment-btn active">Cuentas</button>
-              <button class="segment-btn">Ahorros</button>
-              <button class="segment-btn">Inversiones</button>
+              <button 
+                class="segment-btn" 
+                :class="{ active: selectedCategory === 'cuentas' }"
+                @click="selectCategory('cuentas')"
+              >
+                Cuentas
+              </button>
+              <button 
+                class="segment-btn" 
+                :class="{ active: selectedCategory === 'ahorros' }"
+                @click="selectCategory('ahorros')"
+              >
+                Ahorros
+              </button>
+              <button 
+                class="segment-btn" 
+                :class="{ active: selectedCategory === 'inversiones' }"
+                @click="selectCategory('inversiones')"
+              >
+                Inversiones
+              </button>
             </div>
           </div>
 
@@ -91,20 +108,17 @@
             <div v-else class="empty-state">
               <ion-icon :icon="pieChartOutline" class="empty-icon"></ion-icon>
               <p class="empty-text">No hay presupuestos configurados</p>
-              <ion-button @click="goToBudgets" class="empty-button">
-                Crear presupuesto
-              </ion-button>
             </div>
           </div>
         </main>
-
-        <!-- Floating Action Button -->
-        <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="fab-button">
-          <ion-fab-button @click="goToTransactions" color="success">
-            <ion-icon :icon="add"></ion-icon>
-          </ion-fab-button>
-        </ion-fab>
       </div>
+
+      <!-- Floating Action Button -->
+      <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+        <ion-fab-button @click="goToTransactions" color="success">
+          <ion-icon :icon="add"></ion-icon>
+        </ion-fab-button>
+      </ion-fab>
     </ion-content>
   </ion-page>
 </template>
@@ -114,7 +128,6 @@ import {
   IonPage,
   IonContent,
   IonIcon,
-  IonButton,
   IonFab,
   IonFabButton
 } from '@ionic/vue';
@@ -138,16 +151,36 @@ import { useBudgetsStore } from '@/stores/budgets';
 import { useProfileStore } from '@/stores/profile';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const transactionsStore = useTransactionsStore();
 const budgetsStore = useBudgetsStore();
 const profileStore = useProfileStore();
 const router = useRouter();
 
-const { totalIncome, totalExpenses, balance, expensesByCategory } = storeToRefs(transactionsStore);
+const { totalExpenses, expensesByCategory } = storeToRefs(transactionsStore);
 const { budgetsWithProgress } = storeToRefs(budgetsStore);
 const { profile } = storeToRefs(profileStore);
+
+// Estado para la categoría seleccionada
+const selectedCategory = ref('cuentas');
+
+// Saldos por categoría (datos simulados - en producción vendrían del store)
+const categoryBalances = ref({
+  cuentas: 2450000,
+  ahorros: 8750000,
+  inversiones: 15200000
+});
+
+// Saldo actual basado en la categoría seleccionada
+const currentBalance = computed(() => {
+  return categoryBalances.value[selectedCategory.value as keyof typeof categoryBalances.value];
+});
+
+// Función para cambiar categoría
+const selectCategory = (category: string) => {
+  selectedCategory.value = category;
+};
 
 // Mes actual
 const currentMonth = computed(() => {
@@ -313,6 +346,12 @@ const getBudgetProgressClass = (budget: any) => {
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.balance-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
 .balance-label {
@@ -320,6 +359,18 @@ const getBudgetProgressClass = (budget: any) => {
   font-weight: 500;
   color: var(--ion-color-medium);
   margin: 0 0 12px 0;
+  animation: labelUpdate 0.3s ease-out;
+}
+
+@keyframes labelUpdate {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .balance-amount {
@@ -328,6 +379,23 @@ const getBudgetProgressClass = (budget: any) => {
   letter-spacing: -1px;
   margin: 0 0 20px 0;
   color: var(--ion-text-color);
+  animation: balanceUpdate 0.4s ease-out;
+  transform-origin: left center;
+}
+
+@keyframes balanceUpdate {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateY(-5px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Segmented Control */
@@ -349,13 +417,26 @@ const getBudgetProgressClass = (budget: any) => {
   font-weight: 500;
   color: var(--ion-color-medium);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(1);
+  position: relative;
+  overflow: hidden;
+}
+
+.segment-btn:hover {
+  color: var(--ion-text-color);
+  transform: scale(1.02);
 }
 
 .segment-btn.active {
   background: var(--ion-card-background, #fff);
   color: var(--ion-text-color);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transform: scale(1.05);
+}
+
+.segment-btn:active {
+  transform: scale(0.98);
 }
 
 /* Expenses Card */
@@ -578,17 +659,7 @@ const getBudgetProgressClass = (budget: any) => {
 .empty-text {
   font-size: 16px;
   color: var(--ion-color-medium);
-  margin: 0 0 20px 0;
-}
-
-.empty-button {
-  --background: #20C997;
-  --border-radius: 12px;
-}
-
-/* FAB */
-.fab-button {
-  margin-bottom: 80px;
+  margin: 0;
 }
 
 /* Responsive para desktop */

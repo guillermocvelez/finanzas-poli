@@ -4,8 +4,8 @@ import type { UserProfile } from "@/types";
 
 export const useProfileStore = defineStore("profile", () => {
   const profile = ref<UserProfile>({
-    name: "Usuario",
-    email: "",
+    name: "Guillermo Castaño",
+    email: "guillermoc03@poligran.edu.co",
     currency: "COP",
     theme: "system",
   });
