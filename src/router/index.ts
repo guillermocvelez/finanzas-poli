@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "@ionic/vue-router";
 import { RouteRecordRaw } from "vue-router";
-import TabsPage from "../views/TabsPage.vue";
+import TabsPage from "../views/tabs/TabsPage.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -17,19 +17,19 @@ const routes: Array<RouteRecordRaw> = [
       },
       {
         path: "dashboard",
-        component: () => import("@/views/DashboardPage.vue"),
+        component: () => import("@/views/dashboard/DashboardPage.vue"),
       },
       {
         path: "transactions",
-        component: () => import("@/views/TransactionsPage.vue"),
+        component: () => import("@/views/transactions/TransactionsPage.vue"),
       },
       {
         path: "budgets",
-        component: () => import("@/views/BudgetsPage.vue"),
+        component: () => import("@/views/budgets/BudgetsPage.vue"),
       },
       {
         path: "profile",
-        component: () => import("@/views/ProfilePage.vue"),
+        component: () => import("@/views/profile/ProfilePage.vue"),
       },
     ],
   },

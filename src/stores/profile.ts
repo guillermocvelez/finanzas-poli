@@ -10,7 +10,7 @@ export const useProfileStore = defineStore("profile", () => {
     theme: "system",
   });
 
-  // Cargar datos desde localStorage
+  
   const loadFromStorage = () => {
     const stored = localStorage.getItem("profile");
     if (stored) {
@@ -18,18 +18,18 @@ export const useProfileStore = defineStore("profile", () => {
     }
   };
 
-  // Guardar en localStorage
+  
   const saveToStorage = () => {
     localStorage.setItem("profile", JSON.stringify(profile.value));
   };
 
-  // Actualizar perfil
+  
   const updateProfile = (updates: Partial<UserProfile>) => {
     profile.value = { ...profile.value, ...updates };
     saveToStorage();
   };
 
-  // Inicializar
+  
   loadFromStorage();
 
   return {

@@ -5,7 +5,7 @@ import type { Transaction } from "@/types";
 export const useTransactionsStore = defineStore("transactions", () => {
   const transactions = ref<Transaction[]>([]);
 
-  // Cargar datos desde localStorage
+  
   const loadFromStorage = () => {
     const stored = localStorage.getItem("transactions");
     if (stored) {
@@ -13,12 +13,12 @@ export const useTransactionsStore = defineStore("transactions", () => {
     }
   };
 
-  // Guardar en localStorage
+  
   const saveToStorage = () => {
     localStorage.setItem("transactions", JSON.stringify(transactions.value));
   };
 
-  // Agregar transacción
+  
   const addTransaction = (transaction: Omit<Transaction, "id">) => {
     const newTransaction: Transaction = {
       ...transaction,
@@ -28,13 +28,13 @@ export const useTransactionsStore = defineStore("transactions", () => {
     saveToStorage();
   };
 
-  // Eliminar transacción
+  
   const deleteTransaction = (id: string) => {
     transactions.value = transactions.value.filter((t) => t.id !== id);
     saveToStorage();
   };
 
-  // Editar transacción
+  
   const updateTransaction = (id: string, updates: Partial<Transaction>) => {
     const index = transactions.value.findIndex((t) => t.id === id);
     if (index !== -1) {
@@ -43,7 +43,7 @@ export const useTransactionsStore = defineStore("transactions", () => {
     }
   };
 
-  // Computed properties
+  
   const totalIncome = computed(() => {
     return transactions.value
       .filter((t) => t.type === "income")

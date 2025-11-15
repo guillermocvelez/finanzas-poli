@@ -6,7 +6,7 @@ import { useTransactionsStore } from "./transactions";
 export const useBudgetsStore = defineStore("budgets", () => {
   const budgets = ref<Budget[]>([]);
 
-  // Cargar datos desde localStorage
+  
   const loadFromStorage = () => {
     const stored = localStorage.getItem("budgets");
     if (stored) {
@@ -14,12 +14,12 @@ export const useBudgetsStore = defineStore("budgets", () => {
     }
   };
 
-  // Guardar en localStorage
+  
   const saveToStorage = () => {
     localStorage.setItem("budgets", JSON.stringify(budgets.value));
   };
 
-  // Agregar presupuesto
+  
   const addBudget = (budget: Omit<Budget, "id" | "spent">) => {
     const newBudget: Budget = {
       ...budget,
@@ -30,13 +30,13 @@ export const useBudgetsStore = defineStore("budgets", () => {
     saveToStorage();
   };
 
-  // Eliminar presupuesto
+  
   const deleteBudget = (id: string) => {
     budgets.value = budgets.value.filter((b) => b.id !== id);
     saveToStorage();
   };
 
-  // Editar presupuesto
+  
   const updateBudget = (id: string, updates: Partial<Budget>) => {
     const index = budgets.value.findIndex((b) => b.id === id);
     if (index !== -1) {
@@ -45,13 +45,13 @@ export const useBudgetsStore = defineStore("budgets", () => {
     }
   };
 
-  // Calcular gasto actual basado en transacciones
+  
   const calculateSpent = (category: string) => {
     const transactionsStore = useTransactionsStore();
     return transactionsStore.expensesByCategory[category] || 0;
   };
 
-  // Actualizar gastos de todos los presupuestos
+  
   const updateAllSpent = () => {
     budgets.value.forEach((budget) => {
       budget.spent = calculateSpent(budget.category);
@@ -59,7 +59,7 @@ export const useBudgetsStore = defineStore("budgets", () => {
     saveToStorage();
   };
 
-  // Computed: presupuestos con porcentaje de uso
+  
   const budgetsWithProgress = computed(() => {
     return budgets.value.map((budget) => ({
       ...budget,
@@ -72,7 +72,7 @@ export const useBudgetsStore = defineStore("budgets", () => {
     }));
   });
 
-  // Inicializar
+  
   loadFromStorage();
 
   return {
