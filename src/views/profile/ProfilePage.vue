@@ -11,99 +11,48 @@
 
         <main class="main-content">
           <!-- Información del Usuario -->
-          <section class="profile-section">
-            <h2 class="section-title">Información Personal</h2>
-            <div class="form-fields">
-              <div class="form-field">
-                <label class="field-label">Nombre</label>
-                <input
-                  class="field-input"
-                  v-model="localProfile.name"
-                  placeholder="Tu nombre"
-                  type="text"
-                />
-              </div>
-
-              <div class="form-field">
-                <label class="field-label">Email</label>
-                <input
-                  class="field-input"
-                  v-model="localProfile.email"
-                  type="email"
-                  placeholder="tu@email.com"
-                />
-              </div>
-            </div>
-          </section>
+          <ProfileSection title="Información Personal">
+            <ProfileFormInput
+              label="Nombre"
+              v-model="localProfile.name"
+              placeholder="Tu nombre"
+            />
+            <ProfileFormInput
+              label="Email"
+              v-model="localProfile.email"
+              type="email"
+              placeholder="tu@email.com"
+            />
+          </ProfileSection>
 
           <!-- Preferencias -->
-          <section class="profile-section">
-            <h2 class="section-title">Preferencias</h2>
-            <div class="form-fields">
-              <div class="form-field">
-                <label class="field-label">Moneda</label>
-                <select class="field-select" v-model="localProfile.currency">
-                  <option value="COP">COP - Peso Colombiano</option>
-                  <option value="USD">USD - Dólar</option>
-                  <option value="EUR">EUR - Euro</option>
-                  <option value="MXN">MXN - Peso Mexicano</option>
-                </select>
-              </div>
-
-              <div class="form-field">
-                <label class="field-label">Tema</label>
-                <select class="field-select" v-model="localProfile.theme">
-                  <option value="light">Claro</option>
-                  <option value="dark">Oscuro</option>
-                  <option value="system">Sistema</option>
-                </select>
-              </div>
-            </div>
-          </section>
+          <ProfileSection title="Preferencias">
+            <ProfileFormSelect
+              label="Moneda"
+              v-model="localProfile.currency"
+              :options="currencyOptions"
+            />
+            <ProfileFormSelect
+              label="Tema"
+              v-model="localProfile.theme"
+              :options="themeOptions"
+            />
+          </ProfileSection>
 
           <!-- Estadísticas -->
-          <section class="profile-section">
-            <h2 class="section-title">Estadísticas</h2>
-            <div class="stats-grid">
-              <div class="stat-card">
-                <div class="stat-icon-wrapper transactions">
-                  <ion-icon :icon="receiptOutline" class="stat-icon"></ion-icon>
-                </div>
-                <div class="stat-content">
-                  <p class="stat-label">Transacciones</p>
-                  <p class="stat-value">{{ transactions.length }}</p>
-                </div>
-              </div>
-
-              <div class="stat-card">
-                <div class="stat-icon-wrapper budgets">
-                  <ion-icon :icon="walletOutline" class="stat-icon"></ion-icon>
-                </div>
-                <div class="stat-content">
-                  <p class="stat-label">Presupuestos</p>
-                  <p class="stat-value">{{ budgetsWithProgress.length }}</p>
-                </div>
-              </div>
-
-              <div class="stat-card full-width">
-                <div class="stat-icon-wrapper balance">
-                  <ion-icon :icon="trendingUpOutline" class="stat-icon"></ion-icon>
-                </div>
-                <div class="stat-content">
-                  <p class="stat-label">Balance Actual</p>
-                  <p class="stat-value">{{ formatCurrency(balance) }}</p>
-                </div>
-              </div>
-            </div>
-          </section>
+          <ProfileStats :stats="profileStats" />
 
           <!-- Acciones -->
-          <section class="profile-section">
+          <ProfileSection title="Acciones">
+            <button class="logout-button" @click="handleLogout">
+              <ion-icon :icon="logOutOutline"></ion-icon>
+              <span>Cerrar Sesión</span>
+            </button>
             <button class="danger-button" @click="confirmClearData">
               <ion-icon :icon="trashOutline"></ion-icon>
               <span>Borrar todos los datos</span>
             </button>
-          </section>
+          </ProfileSection>
 
           <!-- Botón Guardar -->
           <div class="save-button-container">
@@ -133,17 +82,28 @@ import {
   receiptOutline, 
   walletOutline, 
   trendingUpOutline, 
-  trashOutline 
+  trashOutline,
+  logOutOutline
 } from 'ionicons/icons';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useProfileStore } from '@/stores/profile';
 import { useTransactionsStore } from '@/stores/transactions';
 import { useBudgetsStore } from '@/stores/budgets';
+import { useAuthStore } from '@/stores/auth';
+import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
+import {
+  ProfileSection,
+  ProfileFormInput,
+  ProfileFormSelect,
+  ProfileStats
+} from '@/components/profile';
 
 const profileStore = useProfileStore();
 const transactionsStore = useTransactionsStore();
 const budgetsStore = useBudgetsStore();
+const authStore = useAuthStore();
+const router = useRouter();
 
 const { profile } = storeToRefs(profileStore);
 const { transactions, balance } = storeToRefs(transactionsStore);
@@ -151,6 +111,41 @@ const { budgetsWithProgress } = storeToRefs(budgetsStore);
 
 const localProfile = ref({ ...profile.value });
 const hasChanges = ref(false);
+
+const currencyOptions = [
+  { value: 'COP', label: 'COP - Peso Colombiano' },
+  { value: 'USD', label: 'USD - Dólar' },
+  { value: 'EUR', label: 'EUR - Euro' },
+  { value: 'MXN', label: 'MXN - Peso Mexicano' }
+];
+
+const themeOptions = [
+  { value: 'light', label: 'Claro' },
+  { value: 'dark', label: 'Oscuro' },
+  { value: 'system', label: 'Sistema' }
+];
+
+const profileStats = computed(() => [
+  {
+    label: 'Transacciones',
+    value: transactions.value.length,
+    icon: receiptOutline,
+    iconClass: 'transactions'
+  },
+  {
+    label: 'Presupuestos',
+    value: budgetsWithProgress.value.length,
+    icon: walletOutline,
+    iconClass: 'budgets'
+  },
+  {
+    label: 'Balance Actual',
+    value: formatCurrency(balance.value),
+    icon: trendingUpOutline,
+    iconClass: 'balance',
+    fullWidth: true
+  }
+]);
 
 watch(localProfile, () => {
   hasChanges.value = JSON.stringify(localProfile.value) !== JSON.stringify(profile.value);
@@ -211,6 +206,29 @@ const confirmClearData = async () => {
 
   await alert.present();
 };
+
+const handleLogout = async () => {
+  const alert = await alertController.create({
+    header: 'Cerrar Sesión',
+    message: '¿Estás seguro de que quieres cerrar sesión?',
+    buttons: [
+      {
+        text: 'Cancelar',
+        role: 'cancel'
+      },
+      {
+        text: 'Cerrar Sesión',
+        role: 'confirm',
+        handler: () => {
+          authStore.logout();
+          router.push('/login');
+        }
+      }
+    ]
+  });
+
+  await alert.present();
+};
 </script>
 
 <style scoped>
@@ -255,176 +273,73 @@ const confirmClearData = async () => {
   gap: 24px;
 }
 
-/* Sections */
-.profile-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.section-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--ion-text-color);
-  margin: 0;
-  letter-spacing: -0.5px;
-}
-
-/* Form Fields */
-.form-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-}
-
-.field-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--ion-color-medium);
-  margin-bottom: 8px;
-}
-
-.field-input,
-.field-select {
-  width: 100%;
-  border-radius: 8px;
-  border: 1px solid var(--ion-border-color, #e0e0e0);
-  background: var(--ion-card-background, #fff);
-  padding: 14px 16px;
-  font-size: 16px;
-  color: var(--ion-text-color);
-  transition: all 0.2s;
-}
-
-.field-input::placeholder {
-  color: var(--ion-color-medium);
-}
-
-.field-input:focus,
-.field-select:focus {
-  outline: none;
-  border-color: #20C997;
-  box-shadow: 0 0 0 2px rgba(32, 201, 151, 0.2);
-}
-
-.field-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%238E8E93' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 0.75rem center;
-  background-repeat: no-repeat;
-  background-size: 1.5em 1.5em;
-  padding-right: 2.5rem;
-  cursor: pointer;
-}
-
-/* Stats Grid */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.stat-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--ion-card-background, #fff);
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid var(--ion-border-color, #e0e0e0);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.stat-card.full-width {
-  grid-column: 1 / -1;
-}
-
-.stat-icon-wrapper {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+/* Buttons */
+.logout-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-}
-
-.stat-icon-wrapper.transactions {
-  background: rgba(32, 201, 151, 0.2);
-}
-
-.stat-icon-wrapper.budgets {
-  background: rgba(59, 130, 246, 0.2);
-}
-
-.stat-icon-wrapper.balance {
-  background: rgba(251, 191, 36, 0.2);
-}
-
-.stat-icon {
-  font-size: 24px;
-}
-
-.stat-icon-wrapper.transactions .stat-icon {
-  color: #20C997;
-}
-
-.stat-icon-wrapper.budgets .stat-icon {
+  gap: 10px;
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: none;
+  background: var(--ion-card-background, #fff);
   color: #3B82F6;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: scale(1);
 }
 
-.stat-icon-wrapper.balance .stat-icon {
-  color: #FBBF24;
+.logout-button ion-icon {
+  font-size: 22px;
 }
 
-.stat-content {
-  flex: 1;
-  min-width: 0;
+.logout-button:hover {
+  background: rgba(59, 130, 246, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 }
 
-.stat-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--ion-color-medium);
-  margin: 0 0 4px 0;
+.logout-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.stat-value {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--ion-text-color);
-  margin: 0;
-}
-
-/* Buttons */
 .danger-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
-  padding: 14px 16px;
+  padding: 16px 20px;
   border-radius: 12px;
-  border: 1px solid #EF4444;
-  background: transparent;
+  border: none;
+  background: var(--ion-card-background, #fff);
   color: #EF4444;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: scale(1);
 }
 
 .danger-button ion-icon {
-  font-size: 20px;
+  font-size: 22px;
 }
 
 .danger-button:hover {
   background: rgba(239, 68, 68, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+
+.danger-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .save-button-container {
@@ -467,14 +382,6 @@ const confirmClearData = async () => {
 
   .main-content {
     padding: 0 32px 100px 32px;
-  }
-
-  .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .stat-card.full-width {
-    grid-column: auto;
   }
 }
 
