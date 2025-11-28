@@ -1,3 +1,7 @@
+// ARCHIVO DE CONFIGURACIÓN DE FIREBASE
+// Descomenta cuando instales Firebase: npm install firebase
+
+/*
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
@@ -23,3 +27,8 @@ export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: "select_account", // Siempre mostrar selector de cuenta
 });
+*/
+
+// Placeholder mientras no se instala Firebase
+export const auth = null;
+export const googleProvider = null;
